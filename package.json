@@ -1,5 +1,5 @@
 {
-  "name": "parts",
+  "name": "@marcusreese/parts",
   "version": "0.0.1",
   "description": "A simple JS framework to help you understand what your code is doing.",
   "main": "index.js",

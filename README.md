@@ -57,7 +57,7 @@ I don't like
 
 ## Installation
 
-npm install marcusreese/parts
+npm install @marcusreese/parts
 
 ## Tests
 
