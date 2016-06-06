@@ -1,0 +1,28 @@
+{
+  "name": "parts",
+  "version": "0.0.1",
+  "description": "A simple JS framework to help you understand what your code is doing.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcusreese/parts.git"
+  },
+  "keywords": [
+    "JavaScript",
+    "framework",
+    "debugging"
+  ],
+  "author": "Marcus Reese <marcusoccasional@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marcusreese/parts/issues"
+  },
+  "homepage": "https://github.com/marcusreese/parts#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3"
+  }
+}
