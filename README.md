@@ -8,6 +8,8 @@ I started this June 5 2016, and it's coming along nicely, but you probably don't
 ## Code Example
 
 A part can be an object or a function or anything really.
+
+```
     parts.add({
       partName: 'myObj',
       partValue: {
@@ -20,9 +22,12 @@ A part can be an object or a function or anything really.
         throw new Error('Just to show off debugging.');
       }
     });
+```
 
 Parts can be used directly as functions or as values.
+```
     parts.myFunc(parts.myObj);
+```
 
 When you are debugging, you can inspect the 'part' to find:
  - part.reads = {};
