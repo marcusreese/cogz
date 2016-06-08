@@ -1,5 +1,5 @@
 {
-  "name": "@marcusreese/parts",
+  "name": "cogz",
   "version": "0.0.1",
   "description": "A simple JS framework to help you understand what your code is doing.",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/marcusreese/parts.git"
+    "url": "git+https://github.com/marcusreese/cogz.git"
   },
   "keywords": [
     "JavaScript",
@@ -18,9 +18,9 @@
   "author": "Marcus Reese <marcusoccasional@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/marcusreese/parts/issues"
+    "url": "https://github.com/marcusreese/cogz/issues"
   },
-  "homepage": "https://github.com/marcusreese/parts#readme",
+  "homepage": "https://github.com/marcusreese/cogz#readme",
   "devDependencies": {
     "chai": "^3.5.0",
     "mocha": "^2.5.3"

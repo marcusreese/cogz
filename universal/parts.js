@@ -1,5 +1,5 @@
 (function partsWrapper(window, module) {
-  function genParts() {
+  function genCogz() {
     var parts = {};
     parts.add = function add(args) {
       if (typeof args === 'string') {
@@ -28,7 +28,7 @@
         for (var i in arguments) {
           var arg = arguments[i];
           if (arg.isPart) {
-            this.reads[arg.partName] = new Date().getTime();
+            this.reads[arg.partName] = new Date();
             this.latestReads.push(arg.partName);
             if (this.latestReads.length > this.maxLatestReads) {
               this.latestReads.shift();
@@ -39,7 +39,7 @@
             if (this.latestUniqueReads.length > this.maxLatestUniqueReads) {
               this.latestUniqueReads.shift();
             }
-            arg.readers[this.partName] = new Date().getTime();
+            arg.readers[this.partName] = new Date();
             arg.latestReaders.push(this.partName);
             if (arg.latestReaders.length > arg.maxLatestReaders) {
               arg.latestReaders.shift();
@@ -82,7 +82,7 @@
 
   // Test for error on duplicate partName.
   (function testDupPartName() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('first', 'test'); // should throw no error.
     var err;
     try {
@@ -97,7 +97,7 @@
 
   // Test for error on parts.add as duplicate partName.
   (function testAddAsDupPartName() {
-    var parts = genParts();
+    var parts = genCogz();
     var err;
     try {
       parts.add('add', 'again');
@@ -111,7 +111,7 @@
 
   // Test for natural functions.
   (function testAddFunc1() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('func1', function () {});
     if (typeof parts.func1 !== 'function') {
       throw new Error('parts.add(func) should add parts.func as function.');
@@ -121,7 +121,7 @@
 
   // Test for predictable functions as parts.
   (function testAddFunc2_1() {
-    var parts = genParts();
+    var parts = genCogz();
     var result = 0;
     parts.add('func1', function () { result = result + 1; });
     parts.func1.partValue();
@@ -133,7 +133,7 @@
 
   // Test for predictable functions as parts.
   (function testAddFunc2_2() {
-    var parts = genParts();
+    var parts = genCogz();
     var result = 0;
     parts.add('func1', function () { result = result + 1; });
     parts.func1();
@@ -145,7 +145,7 @@
 
   // Test for reads etc.
   (function testReadsEtc() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('str1', 'strA');
     parts.add('func1', function () {});
     parts.func1(parts.str1);
@@ -165,7 +165,7 @@
 
   // Test for number of reads etc..
   (function testNumReadsEtc() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('str1', 'strA');
     parts.add('str2', 'strB');
     parts.add('func1', function () {});
@@ -210,7 +210,7 @@
 
   // Test for maxLatestReads etc.
   (function testMaxLatestReadsEtc() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('str1', 'strA');
     parts.add('str2', 'strB');
     parts.add('func1', function () {});
@@ -232,10 +232,11 @@
 
   // Test for readers etc.
   (function testReadersEtc() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('str1', 'strA');
     parts.add('func1', function () {});
     parts.func1(parts.str1);
+      console.log('readers in test', parts.str1.readers)
     if (!parts.str1.readers.func1) {
       console.log('readers in test', parts.str1.readers)
       throw new Error('A part should record any part() that reads it.');
@@ -253,7 +254,7 @@
 
   // Test for number of readers etc.
   (function testNumReadersEtc() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('str1', 'strA');
     parts.add('func1', function () {});
     parts.add('func2', function () {});
@@ -292,7 +293,7 @@
 
   // Test for maxLatestReaders etc.
   (function testMaxLatestReadersEtc() {
-    var parts = genParts();
+    var parts = genCogz();
     parts.add('str1', 'strA');
     parts.add('func1', function () {});
     parts.add('func2', function () {});
@@ -313,7 +314,8 @@
   })(); // end of test
 
   console.log('Be thankful: ' + numTests + ' tests passed.');
-  var parts = genParts();
+  var parts = genCogz();
+  parts.add('spawnEmptyCogz', function spawnEmptyCogz() { return genCogz(); });
   if (module) {
     module.exports = parts;
     // Fill up parts.
