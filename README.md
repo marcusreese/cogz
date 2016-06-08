@@ -10,14 +10,12 @@ I started this June 5 2016, and it's coming along nicely, but you probably don't
 A cog can be an object or a function or anything really.
 
 ```
-    // Use the object syntax . . .
+    // Use the longer syntax (allows more options) . . .
     cogz.add({
-      cogName: 'myObj',
-      value: {
-        prop1: 'value1'
-      }
+      cogName: 'myArray',
+      value: ['c', 'o', 'g', 'z']
     });
-    // Or the shorthand syntax . . .
+    // Or the shorter syntax (for most cases) . . .
     cogz.add('myFunc', function myFunc(obj) {
       throw new Error('Just to show off debugging.');
     });
@@ -27,25 +25,25 @@ A cog can be an object or a function or anything really.
 Cogs can be used directly as functions or as values.
 ```
     // For info on debugging this code, see the next section!
-    cogz.myFunc(cogz.myObj);
+    cogz.myFunc(cogz.myArray);
 ```
 
 ## The Biggest Benefit of Cogz
 
 It adds a single layer to your cog functions that simply keeps track of what other cogs are in the parameters. Why? So that when you are debugging, you can inspect any cog to find:
 
- - What Cogs This Part Has Accessed
-   - myFunc.reads = { 'myObj': 2016-06-08T04:13:35.260Z };
-   - myFunc.latestReads = ['myObj'];
+ - What Cogs This Cog Has Accessed
+   - myFunc.reads = { 'myArray': 2016-06-08T04:13:35.260Z };
+   - myFunc.latestReads = ['myArray'];
    - myFunc.maxLatestReads = 3; // You can change these any time to record more.
-   - myFunc.latestUniqueReads = ['myObj']
+   - myFunc.latestUniqueReads = ['myArray']
    - myFunc.maxLatestUniqueReads = 3;
- - What Cogs Have Accessed This Part
-   - myObj.readers = { 'myFunc': 2016-06-08T04:13:35.260Z };
-   - myObj.latestReaders = ['myFunc'];
-   - myObj.maxLatestReaders = 3;
-   - myObj.latestUniqueReaders = ['myFunc']
-   - myObj.maxLatestUniqueReaders = 3;
+ - What Cogs Have Accessed This Cog
+   - myArray.readers = { 'myFunc': 2016-06-08T04:13:35.260Z };
+   - myArray.latestReaders = ['myFunc'];
+   - myArray.maxLatestReaders = 3;
+   - myArray.latestUniqueReaders = ['myFunc']
+   - myArray.maxLatestUniqueReaders = 3;
  - And Soon . . .
    - // TODO: cog.writes . . .
    - // TODO: cog.writers . . .
