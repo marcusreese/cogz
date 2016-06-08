@@ -32,42 +32,44 @@ describe('cogz', function() {
           expect(typeof err).to.equal('object');
         }
     });
+    it('should throw error on duplicate cogz.spawnEmptyCogz', function() {
+        var err;
+        try {
+          cogz.add('spawnEmptyCogz', 'again');
+        } catch (e) {
+          err = e;
+        } finally {
+          expect(typeof err).to.equal('object');
+        }
+    });
     it('should allow member functions', function() {
-      cogz.add('func1', function () {});
+      cogz.add('func1', function (num) { return ++num; });
       expect(typeof cogz.func1).to.equal('function');
+      expect(cogz.func1(0)).to.equal(1);
       cogz.add({
         cogName: 'func2',
-        value: function () {}
+        value: function (num) { return ++num; }
       });
       expect(typeof cogz.func2).to.equal('function');
-      console.log('FIRST', cogz.first)
+      expect(cogz.func2(0)).to.equal(1);
+    });
+    it('should allow function values', function() {
+      cogz.add('func1', function (num) { return ++num; });
+      expect(typeof cogz.func1.value).to.equal('function');
+      expect(cogz.func1.value(0)).to.equal(1);
+      cogz.add({
+        cogName: 'func2',
+        value: function (num) { return ++num; }
+      });
+      expect(typeof cogz.func2.value).to.equal('function');
+      expect(cogz.func2.value(0)).to.equal(1);
     });
 });
+// TODO: change parts.js to cogz.js and make it work.
+// TODO: in parts/cogz.js, change all cog members to use _ (and fix tests).
+// TODO: add tests here for direct access to properties of _value and try make them pass
+// by putting _value as prototype?!!!! Can do that with func too? and take out old way?
 
-// // Test for predictable functions as cogz.
-// (function testAddFunc2_1() {
-//   var cogz = genCogz();
-//   var result = 0;
-//   cogz.add('func1', function () { result = result + 1; });
-//   cogz.func1.value();
-//   if (result !== 1) {
-//     throw new Error('cogz.func.value should work when called.');
-//   }
-//   else numTests++;
-// })(); // end of test
-//
-// // Test for predictable functions as cogz.
-// (function testAddFunc2_2() {
-//   var cogz = genCogz();
-//   var result = 0;
-//   cogz.add('func1', function () { result = result + 1; });
-//   cogz.func1();
-//   if (result !== 1) {
-//     throw new Error('cogz.func and cogz.func.value should work the same.');
-//   }
-//   else numTests++;
-// })(); // end of test
-//
 // // Test for reads etc.
 // (function testReadsEtc() {
 //   var cogz = genCogz();

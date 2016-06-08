@@ -12,8 +12,8 @@ A cog can be an object or a function or anything really.
 ```
     // Use the longer syntax (allows more options) . . .
     cogz.add({
-      cogName: 'myArray',
-      value: ['c', 'o', 'g', 'z']
+      _cogName: 'myArray',
+      _value: ['c', 'o', 'g', 'z']
     });
     // Or the shorter syntax (for most cases) . . .
     cogz.add('myFunc', function myFunc(obj) {
@@ -33,23 +33,23 @@ Cogs can be used directly as functions or as values.
 It adds a single layer to your cog functions that simply keeps track of what other cogs are in the parameters. Why? So that when you are debugging, you can inspect any cog to find:
 
  - What Cogs This Cog Has Accessed
-   - myFunc.reads = { 'myArray': 2016-06-08T04:13:35.260Z };
-   - myFunc.latestReads = ['myArray'];
-   - myFunc.maxLatestReads = 3; // You can change these any time to record more.
-   - myFunc.latestUniqueReads = ['myArray']
-   - myFunc.maxLatestUniqueReads = 3;
+   - myFunc._reads = { 'myArray': 2016-06-08T04:13:35.260Z };
+   - myFunc._latestReads = ['myArray'];
+   - myFunc._maxLatestReads = 3; // You can change these any time to record more.
+   - myFunc._latestUniqueReads = ['myArray']
+   - myFunc._maxLatestUniqueReads = 3;
  - What Cogs Have Accessed This Cog
-   - myArray.readers = { 'myFunc': 2016-06-08T04:13:35.260Z };
-   - myArray.latestReaders = ['myFunc'];
-   - myArray.maxLatestReaders = 3;
-   - myArray.latestUniqueReaders = ['myFunc']
-   - myArray.maxLatestUniqueReaders = 3;
+   - myArray._readers = { 'myFunc': 2016-06-08T04:13:35.260Z };
+   - myArray._latestReaders = ['myFunc'];
+   - myArray._maxLatestReaders = 3;
+   - myArray._latestUniqueReaders = ['myFunc']
+   - myArray._maxLatestUniqueReaders = 3;
  - And Soon . . .
-   - // TODO: cog.writes . . .
-   - // TODO: cog.writers . . .
-   - // TODO: cog.observers = [];
-   - // TODO: cog.observing = [];
-   - // TODO: cog.filePath . . .
+   - // TODO: cog._writes . . .
+   - // TODO: cog._writers . . .
+   - // TODO: cog._observers = [];
+   - // TODO: cog._observing = [];
+   - // TODO: cog._filePath . . .
 
  In other words, when something goes wrong with your code, the culprits line up and confess--in chronological order. And if you want to change a part (cog) of your code, you can immediately see every other cog that is depending on it.
 
