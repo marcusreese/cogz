@@ -36,8 +36,8 @@ describe('cogz', function() {
       cogz.add('func1', function () {});
       expect(typeof cogz.func1).to.equal('function');
       cogz.add({
-        partName: 'func2',
-        partValue: function () {}
+        cogName: 'func2',
+        value: function () {}
       });
       expect(typeof cogz.func2).to.equal('function');
       console.log('FIRST', cogz.first)
@@ -49,9 +49,9 @@ describe('cogz', function() {
 //   var cogz = genCogz();
 //   var result = 0;
 //   cogz.add('func1', function () { result = result + 1; });
-//   cogz.func1.partValue();
+//   cogz.func1.value();
 //   if (result !== 1) {
-//     throw new Error('cogz.func.partValue should work when called.');
+//     throw new Error('cogz.func.value should work when called.');
 //   }
 //   else numTests++;
 // })(); // end of test
@@ -63,7 +63,7 @@ describe('cogz', function() {
 //   cogz.add('func1', function () { result = result + 1; });
 //   cogz.func1();
 //   if (result !== 1) {
-//     throw new Error('cogz.func and cogz.func.partValue should work the same.');
+//     throw new Error('cogz.func and cogz.func.value should work the same.');
 //   }
 //   else numTests++;
 // })(); // end of test

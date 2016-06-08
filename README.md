@@ -13,17 +13,15 @@ A cog can be an object or a function or anything really.
     // Use the object syntax . . .
     cogz.add({
       cogName: 'myObj',
-      cogValue: {
+      value: {
         prop1: 'value1'
       }
     });
     // Or the shorthand syntax . . .
-    cogz.add({
-      'myFunc',
-      function myFunc(obj) {
-        throw new Error('Just to show off debugging.');
-      }
+    cogz.add('myFunc', function myFunc(obj) {
+      throw new Error('Just to show off debugging.');
     });
+
 ```
 
 Cogs can be used directly as functions or as values.
