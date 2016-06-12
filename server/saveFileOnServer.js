@@ -1,10 +1,10 @@
 (function saveFileOnServerWrapper() {
-  var parts = require('../universal/parts.js');
+  var cogz = require('../universal/cogzMain.js');
   var fs = require('fs');
 
-  parts.add({
-    partName: 'saveFileOnServer',
-    partValue: function saveFileOnServer(path, text) {
+  cogz.addCog({
+    cogName: 'saveFileOnServer',
+    value: function saveFileOnServer(path, text) {
       fs.writeFile(__dirname + '/' + path, text, function(err) {
           if (err) {
               return console.log(err);

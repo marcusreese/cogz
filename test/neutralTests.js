@@ -2,83 +2,59 @@
 
 var expect = require('chai').expect;
 var parentCogz = require('../index');
-var cogz;
 
-describe('cogz', function() {
-    beforeEach(function () {
-      cogz = parentCogz.spawnEmptyCogz();
-    })
-    it('should have an add function', function() {
-        expect(typeof cogz.add).to.equal('function');
-    });
-    it('should throw error on duplicate name', function() {
-        cogz.add('first', 'test');
-        var err;
-        try {
-          cogz.add('first', 'again');
-        } catch (e) {
-          err = e;
-        } finally {
-          expect(typeof err).to.equal('object');
-        }
-    });
-    it('should throw error on duplicate cogz.add', function() {
-        var err;
-        try {
-          cogz.add('add', 'again');
-        } catch (e) {
-          err = e;
-        } finally {
-          expect(typeof err).to.equal('object');
-        }
-    });
-    it('should throw error on duplicate cogz.spawnEmptyCogz', function() {
-        var err;
-        try {
-          cogz.add('spawnEmptyCogz', 'again');
-        } catch (e) {
-          err = e;
-        } finally {
-          expect(typeof err).to.equal('object');
-        }
-    });
-    it('should allow member functions', function() {
-      cogz.add('func1', function (num) { return ++num; });
-      expect(typeof cogz.func1).to.equal('function');
-      expect(cogz.func1(0)).to.equal(1);
-      cogz.add({
-        cogName: 'func2',
-        value: function (num) { return ++num; }
+describe('Cogz, the boring side,', function() {
+  var cogz;
+  beforeEach(function () {
+    cogz = parentCogz.spawnEmptyCogz();
+  });
+  var objClasses = [
+    { "a string": 'str' },
+    { "an empty string": '' },
+    { "a positive number": 123 },
+    { "a negative number": -123 },
+    { "a zero": 0 },
+    { "a true": true },
+    { "a false": false },
+    { "an empty object": {} },
+    { "an object": { 'a': 1 } },
+    { "an empty array": [] },
+    { "an array": [1, 2, 3] },
+    { "a function": function () {} },
+    { "null": null },
+    { "undefined": undefined },
+  ];
+  var cogObjClasses = [
+    { "an empty object": {} },
+    { "an object": { 'a': 1 } },
+    { "an empty array": [] },
+    { "an array": [1, 2, 3] },
+    { "a function": function () {} },
+  ];
+  var label, val;
+  for (var pair in cogObjClasses) {
+    label = Object.keys(cogObjClasses[pair])[0];
+    val = cogObjClasses[pair][label];
+    (function makeIt1(label, val) {
+      it('should record when a function cog reads ' + label + ' cog.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        cogz.addCog('func1', function () {});
+        // Func1 reads other cog.
+        cogz.func1(cogz[label]);
+        expect(cogz.cogInfo[label].timesRead).to.equal(1);
+        expect(cogz.cogInfo[label].readers.func1).to.equal(1);
+        expect(cogz.cogInfo.func1.cogsRead[label]).to.exist; // as date.
       });
-      expect(typeof cogz.func2).to.equal('function');
-      expect(cogz.func2(0)).to.equal(1);
-    });
-    it('should allow function values', function() {
-      cogz.add('func1', function (num) { return ++num; });
-      expect(typeof cogz.func1.value).to.equal('function');
-      expect(cogz.func1.value(0)).to.equal(1);
-      cogz.add({
-        cogName: 'func2',
-        value: function (num) { return ++num; }
-      });
-      expect(typeof cogz.func2.value).to.equal('function');
-      expect(cogz.func2.value(0)).to.equal(1);
-    });
+    })(label, val)
+
+  }
+
 });
-// TODO: change parts.js to cogz.js and make it work.
-// TODO: in parts/cogz.js, change all cog members to use _ (and fix tests).
-// TODO: add tests here for direct access to properties of _value and try make them pass
-// by putting _value as prototype?!!!! Can do that with func too? and take out old way?
 
-// // Test for reads etc.
+
+// Test for reads etc.
 // (function testReadsEtc() {
 //   var cogz = genCogz();
-//   cogz.add('str1', 'strA');
-//   cogz.add('func1', function () {});
-//   cogz.func1(cogz.str1);
-//   if (!cogz.func1.reads.str1) {
-//     throw new Error('A function should record any part it reads.');
-//   }
 //   else numTests++;
 //   if (cogz.func1.latestReads[0] !== 'str1') {
 //     throw new Error('A function should record the latest part it reads.');
@@ -93,13 +69,13 @@ describe('cogz', function() {
 // // Test for number of reads etc..
 // (function testNumReadsEtc() {
 //   var cogz = genCogz();
-//   cogz.add('str1', 'strA');
-//   cogz.add('str2', 'strB');
-//   cogz.add('func1', function () {});
+//   cogz.addCog('str1', 'strA');
+//   cogz.addCog('str2', 'strB');
+//   cogz.addCog('func1', function () {});
 //   cogz.func1(cogz.str1);
 //   cogz.func1(cogz.str1);
 //   if (Object.keys(cogz.func1.reads).length !== 1) {
-//     throw new Error('part.reads should add only unique reads.');
+//     throw new Error('part.reads should addCog only unique reads.');
 //   }
 //   else numTests++;
 //   if (cogz.func1.latestReads[0] !== 'str1' ||
@@ -109,14 +85,14 @@ describe('cogz', function() {
 //   }
 //   else numTests++;
 //   if (cogz.func1.latestUniqueReads.length !== 1) {
-//     throw new Error('part.latestUniqueReads should add only unique reads.' +
+//     throw new Error('part.latestUniqueReads should addCog only unique reads.' +
 //     'State:' + cogz.func1.latestUniqueReads);
 //   }
 //   else numTests++;
 //
 //   cogz.func1(cogz.str2);
 //   if (Object.keys(cogz.func1.reads).length !== 2) {
-//     throw new Error('part.reads should add all unique reads.');
+//     throw new Error('part.reads should addCog all unique reads.');
 //   }
 //   else numTests++;
 //   if (cogz.func1.latestReads[0] !== 'str1' ||
@@ -129,7 +105,7 @@ describe('cogz', function() {
 //   if (cogz.func1.latestUniqueReads[0] !== 'str1' ||
 //     cogz.func1.latestUniqueReads[1] !== 'str2' ||
 //     cogz.func1.latestUniqueReads.length !== 2) {
-//     throw new Error('part.latestUniqueReads should add all unique reads.' +
+//     throw new Error('part.latestUniqueReads should addCog all unique reads.' +
 //     'State:' + cogz.func1.latestUniqueReads);
 //   }
 //   else numTests++;
@@ -138,9 +114,9 @@ describe('cogz', function() {
 // // Test for maxLatestReads etc.
 // (function testMaxLatestReadsEtc() {
 //   var cogz = genCogz();
-//   cogz.add('str1', 'strA');
-//   cogz.add('str2', 'strB');
-//   cogz.add('func1', function () {});
+//   cogz.addCog('str1', 'strA');
+//   cogz.addCog('str2', 'strB');
+//   cogz.addCog('func1', function () {});
 //   cogz.func1.maxLatestReads = 1;
 //   cogz.func1.maxLatestUniqueReads = 1;
 //   cogz.func1(cogz.str1);
@@ -160,8 +136,8 @@ describe('cogz', function() {
 // // Test for readers etc.
 // (function testReadersEtc() {
 //   var cogz = genCogz();
-//   cogz.add('str1', 'strA');
-//   cogz.add('func1', function () {});
+//   cogz.addCog('str1', 'strA');
+//   cogz.addCog('func1', function () {});
 //   cogz.func1(cogz.str1);
 //   if (!cogz.str1.readers.func1) {
 //     console.log('readers in test', cogz.str1.readers)
@@ -181,13 +157,13 @@ describe('cogz', function() {
 // // Test for number of readers etc.
 // (function testNumReadersEtc() {
 //   var cogz = genCogz();
-//   cogz.add('str1', 'strA');
-//   cogz.add('func1', function () {});
-//   cogz.add('func2', function () {});
+//   cogz.addCog('str1', 'strA');
+//   cogz.addCog('func1', function () {});
+//   cogz.addCog('func2', function () {});
 //   cogz.func1(cogz.str1);
 //   cogz.func1(cogz.str1);
 //   if (Object.keys(cogz.str1.readers).length !== 1) {
-//     throw new Error('part.readers should add only unique readers.');
+//     throw new Error('part.readers should addCog only unique readers.');
 //   }
 //   else numTests++;
 //   if (cogz.str1.latestReaders[0] !== 'func1' ||
@@ -199,7 +175,7 @@ describe('cogz', function() {
 //
 //   cogz.func2(cogz.str1);
 //   if (Object.keys(cogz.str1.readers).length !== 2) {
-//     throw new Error('part.readers should add all unique readers.');
+//     throw new Error('part.readers should addCog all unique readers.');
 //   }
 //   else numTests++;
 //   if (cogz.str1.latestReaders[0] !== 'func1' ||
@@ -220,9 +196,9 @@ describe('cogz', function() {
 // // Test for maxLatestReaders etc.
 // (function testMaxLatestReadersEtc() {
 //   var cogz = genCogz();
-//   cogz.add('str1', 'strA');
-//   cogz.add('func1', function () {});
-//   cogz.add('func2', function () {});
+//   cogz.addCog('str1', 'strA');
+//   cogz.addCog('func1', function () {});
+//   cogz.addCog('func2', function () {});
 //   cogz.str1.maxLatestReaders = 1;
 //   cogz.str1.maxLatestUniqueReaders = 1;
 //   cogz.func1(cogz.str1);
