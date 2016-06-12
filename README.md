@@ -1,7 +1,7 @@
-[![Build Status](https://travis-ci.org/marcusreese/cogz.svg?branch=master)](https://travis-ci.org/marcusreese/cogz)
-
 # Cogz
 A simple JS framework to help you understand what your code is doing.
+
+[![Build Status](https://travis-ci.org/marcusreese/cogz.svg?branch=master)](https://travis-ci.org/marcusreese/cogz) [![Coverage Status](https://coveralls.io/repos/github/marcusreese/cogz/badge.svg?branch=master)](https://coveralls.io/github/marcusreese/cogz?branch=master)
 
 ## Synopsis
 
