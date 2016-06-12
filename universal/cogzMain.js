@@ -80,21 +80,33 @@
       var originalToString = cog.toString;
       var originalValueOf = cog.valueOf;
       cog.toString = function cogToString(x) {
-        var returnableString;
+        var forReturn = {};
         if (x && cogInfo[args.cogName][x]) {
           // Give the specific requested property.
-          returnableString = cogInfo[args.cogName][x];
+          forReturn[x] = cogInfo[args.cogName][x];
+        } else if (x && typeof x === 'string ') {
+          // See if it's an abbreviation for specific results.
+          for (var propName in cogInfo[args.cogName]) {
+            if (propName.indexOf(x) !== -1) {
+              forReturn[propName] = cogInfo[args.cogName][propName];
+            }
+          }
         } else if (x && x.addCog) {
           // cogz object passed as arg, so give all info for this cog.
-          returnableString = cogInfo[args.cogName];
+          forReturn = cogInfo[args.cogName];
         } else if (typeof cog === 'function') {
           // No recognized args, so let Function give the function text.
-          returnableString = originalToString.apply(this.wrappedFunction, arguments);
+          forReturn = originalToString.apply(this.wrappedFunction, arguments);
         } else {
           // No recognized args, so let Object or Array provide the text.
-          returnableString = originalToString.apply(this, arguments);
+          forReturn = originalToString.apply(this, arguments);
         }
-        return returnableString;
+        if (typeof forReturn === 'string') {
+          return forReturn;
+        }
+        else {
+          return JSON.stringify(forReturn, null, 2);
+        }
       }
       cog.valueOf = function cogValueOf(x) {
         var returnableVal;
@@ -136,7 +148,7 @@
           } else {
             argInfo.readers[fnDetails.cogName] = 1;
           }
-          fnInfo.cogsRead[argInfo.cogName] = new Date();
+          fnInfo.cogsRead[argInfo.cogName] = new Date().toISOString;
         }
       }
     // also record number of keys in global (or wrap global??)
