@@ -88,10 +88,13 @@
         if (x && cogInfo[args.cogName][x]) {
           // Give the specific requested property.
           forReturn[x] = cogInfo[args.cogName][x];
-        } else if (x && typeof x === 'string ') {
+        } else if (x && typeof x === 'string') {
           // See if it's an abbreviation for specific results.
           for (var propName in cogInfo[args.cogName]) {
-            if (propName.indexOf(x) !== -1) {
+            console.log('TESING x:', propName.toLowerCase(), x.toLowerCase());
+            if (propName.toLowerCase().indexOf(x.toLowerCase()) !== -1) {
+              console.log('TESING INNER x:', propName.toLowerCase(), x.toLowerCase());
+
               forReturn[propName] = cogInfo[args.cogName][propName];
             }
           }
@@ -106,6 +109,7 @@
           forReturn = originalToString.apply(this, arguments);
         }
         if (typeof forReturn === 'string') {
+          console.log('TESING NORMAL:');
           return forReturn;
         }
         else {
@@ -143,13 +147,10 @@
     // record how many times they've been run before running fn.
       for (var i in arguments) {
         arg = arguments[i];
-        console.log('Before before, arg.valueOf("cogName"):', arg.valueOf('cogName'));
         if (typeof arg !== 'number' && cogInfo[arg.valueOf('cogName')]) {
           argInfo = cogInfo[arg.valueOf('cogName')];
           argMorph = cogInfo[arg.valueOf('cogName')];
-          console.log('Before, timesRead:', argInfo.timesRead);
           argInfo.timesRead++;
-          console.log('After, timesRead:', argInfo.timesRead);
           if (argInfo.readers[fnDetails.cogName]) {
             argInfo.readers[fnDetails.cogName]++;
           } else {

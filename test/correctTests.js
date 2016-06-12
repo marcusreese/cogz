@@ -8,37 +8,24 @@ describe('Cogz used correctly', function() {
   beforeEach(function () {
     cogz = parentCogz.spawnEmptyCogz();
   });
-  it('should have an addCog function', function() {
-    expect(typeof cogz.addCog).to.equal('function');
+  it('should produce a toString for an exact match', function() {
+    cogz.addCog('someName', ['someValue']);
+    var result = cogz.someName.toString('writers')
+    console.log('RESULT', result);
+    expect(result).to.exist;
+    expect(result).to.equal('{\n  "writers": {}\n}');
   });
-  it('should allow member functions', function() {
-    cogz.addCog('func1', function (num) { return ++num; });
-    expect(typeof cogz.func1).to.equal('function');
-    expect(cogz.func1(0)).to.equal(1);
-    cogz.addCog({
-      cogName: 'func2',
-      value: function (num) { return ++num; }
-    });
-    expect(typeof cogz.func2).to.equal('function');
-    expect(cogz.func2(0)).to.equal(1);
-  });
-  it('should allow member objects', function() {
-    cogz.addCog('config1', { prop1: 'val1' });
-    expect(cogz.config1.prop1).to.equal('val1');
-    cogz.addCog({
-      cogName: 'config2',
-      value: { prop1: 'val1' }
-    });
-    expect(cogz.config2.prop1).to.equal('val1');
-  });
-  it('should allow member arrays', function() {
-    cogz.addCog('arr1', ['val1']);
-    expect(cogz.arr1[0]).to.equal('val1');
-    cogz.addCog({
-      cogName: 'arr2',
-      value: [ 'val2' ]
-    });
-    expect(cogz.arr2[0]).to.equal('val2');
+  it('should produce a toString for a partial match', function() {
+    cogz.addCog('someName', ['someValue']);
+    var result = cogz.someName.toString('writer')
+    console.log('RESULT', result);
+    expect(result).to.exist;
+    expect(result).to.equal('{\n' +
+      '  "latestUniqueWriters": [],\n' +
+      '  "latestWriters": [],\n' +
+      '  "writers": {},\n' +
+      '  "maxLatestUniqueWriters": 3,\n' +
+      '  "maxLatestWriters": 3\n}');
   });
 });
 // TODO: change parts.js to cogz.js and make it work.

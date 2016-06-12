@@ -32,6 +32,39 @@ describe('Cogz, the boring side,', function() {
     { "a function": function () {} },
   ];
   var label, val;
+
+  it('should have an addCog function', function() {
+    expect(typeof cogz.addCog).to.equal('function');
+  });
+  it('should allow member functions', function() {
+    cogz.addCog('func1', function (num) { return ++num; });
+    expect(typeof cogz.func1).to.equal('function');
+    expect(cogz.func1(0)).to.equal(1);
+    cogz.addCog({
+      cogName: 'func2',
+      value: function (num) { return ++num; }
+    });
+    expect(typeof cogz.func2).to.equal('function');
+    expect(cogz.func2(0)).to.equal(1);
+  });
+  it('should allow member objects', function() {
+    cogz.addCog('config1', { prop1: 'val1' });
+    expect(cogz.config1.prop1).to.equal('val1');
+    cogz.addCog({
+      cogName: 'config2',
+      value: { prop1: 'val1' }
+    });
+    expect(cogz.config2.prop1).to.equal('val1');
+  });
+  it('should allow member arrays', function() {
+    cogz.addCog('arr1', ['val1']);
+    expect(cogz.arr1[0]).to.equal('val1');
+    cogz.addCog({
+      cogName: 'arr2',
+      value: [ 'val2' ]
+    });
+    expect(cogz.arr2[0]).to.equal('val2');
+  });
   for (var pair in cogObjClasses) {
     label = Object.keys(cogObjClasses[pair])[0];
     val = cogObjClasses[pair][label];
@@ -74,8 +107,28 @@ describe('Cogz, the boring side,', function() {
         cogz.func1(cogz[label]);
         expect(cogz.cogInfo.func1.cogsRead[label]).to.exist;
       });
+      it('should preserve the normal toString of ' + label, function() {
+        cogz.addCog({ cogName: label, value: val });
+        expect(typeof cogz[label].toString).to.equal('function');
+        expect(typeof cogz[label].toString()).to.equal('string');
+      });
     })(label, val)
   }
+  it('should preserve the normal toString of a function', function() {
+    cogz.addCog({ cogName: 'fn1', value: function () { 'test' } });
+    var fn2 = function () { 'test' };
+    expect(cogz.fn1.toString()).to.equal(fn2.toString());
+  });
+  it('should preserve the normal toString of an object', function() {
+    cogz.addCog({ cogName: 'ob1', value: { test: 1 } });
+    var ob2 = { test: 1 };
+    expect(cogz.ob1.toString()).to.equal(ob2.toString());
+  });
+  it('should preserve the normal toString of an array', function() {
+    cogz.addCog({ cogName: 'ar1', value: ['test'] });
+    var ar2 = ['test'];
+    expect(cogz.ar1.toString()).to.equal(ar2.toString());
+  });
   // for (var pair in cogObjClasses) {
   //   label = Object.keys(cogObjClasses[pair])[0];
   //   val = cogObjClasses[pair][label];
