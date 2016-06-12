@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/marcusreese/cogz.svg?branch=master)](https://travis-ci.org/marcusreese/cogz)
+
 # Cogz
 A simple JS framework to help you understand what your code is doing.
 
