@@ -66,14 +66,18 @@
     return info;
   }
   function generateMorph(args, cogInfo) {
-    var morph = [
-      typeof args.value === 'function' ?
-        args.value.toString() : JSON.stringify(args.value)
-    ]
-    return morph;
+    return {
+      cogName: args.cogName,
+      values: [
+        {
+          "time": new Date().toISOString(),
+          "writer": "cogz",
+          "value": args.value
+        }
+      ]
+    };
   }
   function generateCog(args, cogInfo, cogMorph) {
-  console.log('Before:', args);
     var cog = (typeof args.value === 'function') ?
       functionWrapper(args, cogInfo, cogMorph) : args.value;
     if (typeof cog === 'object' || typeof cog === 'function') {
@@ -139,10 +143,13 @@
     // record how many times they've been run before running fn.
       for (var i in arguments) {
         arg = arguments[i];
-        if (typeof arg !== 'number' && cogInfo[arg.toString('cogName')]) {
-          argInfo = cogInfo[arg.toString('cogName')];
-          argMorph = cogInfo[arg.toString('cogName')];
+        console.log('Before before, arg.valueOf("cogName"):', arg.valueOf('cogName'));
+        if (typeof arg !== 'number' && cogInfo[arg.valueOf('cogName')]) {
+          argInfo = cogInfo[arg.valueOf('cogName')];
+          argMorph = cogInfo[arg.valueOf('cogName')];
+          console.log('Before, timesRead:', argInfo.timesRead);
           argInfo.timesRead++;
+          console.log('After, timesRead:', argInfo.timesRead);
           if (argInfo.readers[fnDetails.cogName]) {
             argInfo.readers[fnDetails.cogName]++;
           } else {

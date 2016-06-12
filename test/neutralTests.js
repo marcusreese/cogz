@@ -36,19 +36,52 @@ describe('Cogz, the boring side,', function() {
     label = Object.keys(cogObjClasses[pair])[0];
     val = cogObjClasses[pair][label];
     (function makeIt1(label, val) {
-      it('should record when a function cog reads ' + label + ' cog.', function() {
+      it('should record the name of ' + label + ' in cogInfo.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        expect(cogz.cogInfo[label].cogName).to.equal(label);
+      });
+      it('should record the name of ' + label + ' in cogMorph.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        expect(cogz.cogMorph[label].cogName).to.equal(label);
+      });
+      it('should give the name of ' + label + ' via toString.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        expect(cogz[label].toString('cogName'))
+          .to.equal('{\n  "cogName": "' + label + '"\n}');
+      });
+      it('should give the name of ' + label + ' via valueOf.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        expect(cogz[label].valueOf('cogName')).to.equal(label);
+      });
+      it('should bump timesRead when a function reads ' + label + '.', function() {
         cogz.addCog({ cogName: label, value: val });
         cogz.addCog('func1', function () {});
         // Func1 reads other cog.
         cogz.func1(cogz[label]);
         expect(cogz.cogInfo[label].timesRead).to.equal(1);
+      });
+      it('should add to readers when a function reads ' + label + '.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        cogz.addCog('func1', function () {});
+        // Func1 reads other cog.
+        cogz.func1(cogz[label]);
         expect(cogz.cogInfo[label].readers.func1).to.equal(1);
-        expect(cogz.cogInfo.func1.cogsRead[label]).to.exist; // as date.
+      });
+      it('should add to cogsRead when a function reads ' + label + '.', function() {
+        cogz.addCog({ cogName: label, value: val });
+        cogz.addCog('func1', function () {});
+        // Func1 reads other cog.
+        cogz.func1(cogz[label]);
+        expect(cogz.cogInfo.func1.cogsRead[label]).to.exist;
       });
     })(label, val)
-
   }
-
+  // for (var pair in cogObjClasses) {
+  //   label = Object.keys(cogObjClasses[pair])[0];
+  //   val = cogObjClasses[pair][label];
+  //   (function makeIt2(label, val) {
+  //   })(label, val)
+  // }
 });
 
 
