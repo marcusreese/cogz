@@ -1,6 +1,6 @@
 {
   "name": "cogz",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "A simple JS framework to help you understand what your code is doing.",
   "main": "index.js",
   "scripts": {
