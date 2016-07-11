@@ -47,7 +47,7 @@ cogz.add({
     ]
   },
   value: function (arr, obj) {
-    obj.news.push(app.watchedArray.asCog.cogName + ' has been changed');
+    obj.news.push(arr.asCog.cogName + ' has been changed');
   }
 });
 // So now app has app.arrayWatcherFunction()

@@ -5,7 +5,7 @@ var cogz = require('../index');
 
 describe('Cogz used incorrectly', function() {
   beforeEach(function () {
-    cogz.clear(['cogs', 'changes', 'warnings']);
+    cogz.clear(['cogNames', 'changes', 'warnings']);
   });
   var primitives = [
     ["a string.", 'str'],
@@ -172,11 +172,11 @@ describe('Cogz used incorrectly', function() {
       value: {},
       reduceLogs: true
     });
-    expect(Object.keys(cogz.cogs).length).to.be.above(0);
+    expect(Object.keys(cogz.containersByCogName).length).to.be.above(0);
     expect(cogz.changes.length).to.be.above(0);
     expect(cogz.warnings.length).to.be.above(0);
     cogz.clear();
-    expect(Object.keys(cogz.cogs).length).to.equal(0);
+    expect(Object.keys(cogz.containersByCogName).length).to.equal(0);
     expect(cogz.changes.length).to.equal(0);
     expect(cogz.warnings.length).to.equal(0);
   });

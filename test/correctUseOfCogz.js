@@ -4,8 +4,9 @@ var expect = require('chai').expect;
 var cogz= require('../index');
 
 describe('Cogz used correctly', function() {
+  var logTemp = console.log.bind(console);
   beforeEach(function () {
-    cogz.clear(['cogs', 'changes']); // let 'warnings' accumulate for last test.
+    cogz.clear(['cogNames', 'changes']); // let 'warnings' accumulate for last test.
   });
   var cogTypes = [
     ["a ", "function", function () {}],
@@ -13,9 +14,9 @@ describe('Cogz used correctly', function() {
     ["an ", "object", {}]
   ]
   cogTypes.forEach(function testType(type) {
-    // adds a function, adds an array, add an object
     it("adds " + type[0] + type[1] + " to a container.", function () {
-      var name = type[0] + type[1], app = {};
+      var name = type[0] + type[1];
+      var app = {};
       var val1 = type[1]==='function' ?
         function () {} :
         JSON.parse(JSON.stringify(type[2]));
@@ -32,17 +33,17 @@ describe('Cogz used correctly', function() {
     ["an ", "object", {}]
   ]
   dataTypes.forEach(function testType(type) {
-    it("configures numValuesToSave on " + type[0] + type[1] + ".", function () {
+    it("configures maxChangesToSave on " + type[0] + type[1] + ".", function () {
       var name = type[0] + type[1], app = {};
       cogz.add({
         container: app,
         cogName: name,
         value: JSON.parse(JSON.stringify(type[2])),
-        numValuesToSave: 8
+        maxChangesToSave: 8
       });
-      expect(app[name].asCog.numValuesToSave).to.equal(8);
-      app[name].asCog.numValuesToSave = Infinity;
-      expect(app[name].asCog.numValuesToSave).to.equal(Infinity);
+      expect(app[name].asCog.maxChangesToSave).to.equal(8);
+      app[name].asCog.maxChangesToSave = Infinity;
+      expect(app[name].asCog.maxChangesToSave).to.equal(Infinity);
     });
     it("saves changes of " + type[0] + type[1] + " in cogz.changes.", function () {
       var name = type[0] + type[1], app = {};
@@ -263,6 +264,180 @@ describe('Cogz used correctly', function() {
     expect(cogz.warnings.length).to.equal(numWarnings);
     expect(app.watchedArray.length).to.equal(10);
   });
+  it("maintains numChangesDeleted on cog and cogz.", function () {
+    var app = {};
+    cogz.clear(['changes']);
+    cogz.add({
+      container: app,
+      cogName: 'needer',
+      argGroups: {
+        groupX: [
+          { alwaysWatch: 'watchedArray' }
+        ]
+      },
+      value: function (arr) {
+        if (arr.length < 50) arr.push('change');
+      }
+    });
+    cogz.maxChangesToSave = 40;
+    cogz.add({
+      container: app,
+      cogName: 'watchedArray',
+      value: ['val'],
+      maxChangesToSave: 30
+    });
+    expect(cogz.changes.length).to.equal(40);
+    expect(app.watchedArray.asCog.changes.length).to.equal(30);
+    expect(cogz.numChangesDeleted).to.equal(10);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(20);
+  });
+  it("allows a cog to be replaced.", function () {
+    var app = {};
+    cogz.add({
+      container: app,
+      cogName: 'needer',
+      argGroups: {
+        groupX: [
+          { alwaysWatch: 'watchedArray' }
+        ]
+      },
+      value: function (arr) {
+        if (arr.length < 50) arr.push('change');
+      }
+    });
+    cogz.maxChangesToSave = 40;
+    cogz.add({
+      container: app,
+      cogName: 'watchedArray',
+      value: ['val'],
+      maxChangesToSave: 30
+    });
+    expect(app.watchedArray.length).to.equal(50);
+    expect(app.watchedArray.asCog.changerCogs.needer).to.equal(49);
+    expect(cogz.numChangesDeleted).to.equal(10);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(20);
+    cogz.replace({
+      container: app,
+      cogName: 'watchedArray',
+      value: ['valInTotallyNewArray']
+    });
+    expect(app.watchedArray.length).to.equal(50);
+    expect(app.watchedArray.asCog.changerCogs.needer).to.equal(49+49);
+    expect(cogz.numChangesDeleted).to.equal(60); // this and similar below are prob wrong too.
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(70);
+  });
+  it("allows a cog to be replaced without repeating container.", function () {
+    var app = {};
+    cogz.add({
+      container: app,
+      cogName: 'needer',
+      argGroups: {
+        groupX: [
+          { alwaysWatch: 'watchedArray' }
+        ]
+      },
+      value: function (arr) {
+        if (arr.length < 50) arr.push('change');
+      }
+    });
+    cogz.maxChangesToSave = 40;
+    cogz.add({
+      container: app,
+      cogName: 'watchedArray',
+      value: ['val'],
+      maxChangesToSave: 30
+    });
+    expect(cogz.numChangesDeleted).to.equal(10);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(20);
+    cogz.replace({
+      cogName: 'watchedArray',
+      value: ['valInTotallyNewArray']
+    });
+    expect(cogz.numChangesDeleted).to.equal(60);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(70);
+  });
+  it("allows a cog to be replaced multiple times.", function () {
+    var app = {};
+    cogz.add({
+      container: app,
+      cogName: 'needer',
+      argGroups: {
+        groupX: [
+          { alwaysWatch: 'watchedArray' }
+        ]
+      },
+      value: function (arr) {
+        if (arr.length < 50) arr.push('change');
+      }
+    });
+    cogz.maxChangesToSave = 40;
+    cogz.add({
+      container: app,
+      cogName: 'watchedArray',
+      value: ['val'],
+      maxChangesToSave: 30
+    });
+    expect(cogz.numChangesDeleted).to.equal(10);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(20);
+    cogz.replace({
+      cogName: 'watchedArray',
+      value: ['valInTotallyNewArray']
+    });
+    expect(cogz.numChangesDeleted).to.equal(60);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(70);
+    cogz.replace({
+      cogName: 'watchedArray',
+      value: ['valInAnotherNewArray']
+    });
+    expect(cogz.numChangesDeleted).to.equal(110);
+    expect(app.watchedArray.asCog.numChangesDeleted).to.equal(120);
+  });
+  it("allows a function cog to be replaced.", function () {
+    var app = {};
+    cogz.maxChangesToSave = 45;
+    cogz.add({
+      container: app,
+      cogName: 'funcName',
+      value: function () {
+        cogz.maxChangesToSave = 90;
+      }
+    });
+    app.funcName();
+    expect(cogz.maxChangesToSave).to.equal(90);
+    cogz.replace({
+      cogName: 'funcName',
+      value: function () {
+        cogz.maxChangesToSave = 180;
+      }
+    });
+    app.funcName();
+    expect(cogz.maxChangesToSave).to.equal(180);
+    cogz.replace({
+      cogName: 'funcName',
+      value: function () {
+        cogz.maxChangesToSave = 360;
+      }
+    });
+    app.funcName();
+    expect(cogz.maxChangesToSave).to.equal(360);
+  });
+  it("allows the stringify replacer to be overwritten.", function () {
+    var app = {};
+    var oldReplacer = cogz.stringifyReplacer;
+    cogz.stringifyReplacer = function (key, value) {
+      if (value instanceof Array) {
+        return 'someText';
+      }
+      return value;
+    }
+    cogz.add({
+      container: app,
+      cogName: 'someArray',
+      value: ['val']
+    });
+    expect(cogz.changes[0].changeRecord.stringValue).to.equal('"someText"');
+    cogz.stringifyReplacer = oldReplacer;
+  });
   it("handles a good example for the readme.", function () {
 
     // Create one or more containers for namespacing.
@@ -274,17 +449,22 @@ describe('Cogz used correctly', function() {
       cogName: 'watchedArray',
       value: ['arrayItem0']
     });
+
     // So now app has app.watchedArray.
     expect(app.watchedArray instanceof Array).to.equal(true);
+
     // And its current form is saved so that changes can be tracked.
     expect(cogz.changes.length).to.equal(1);
     expect(cogz.changes[0].cogName).to.equal('watchedArray');
     expect(cogz.changes[0].changeRecord.stringValue).to.equal('["arrayItem0"]');
+
     // By default, cogz saves the last 100 changes. Configuring that is easy.
     cogz.maxChangesToSave = 20;
+
     // The watchedArray cog also keeps some records in its own .asCog property.
     var arrayAsCog = app.watchedArray.asCog;
     expect(arrayAsCog.cogName).to.equal('watchedArray');
+
     // The cogz.changes array interleaves changes from all data cogs,
     // but if you're more interested in watchedArray, it tracks its own changes.
     expect(arrayAsCog.changes.length).to.equal(1);
@@ -302,19 +482,21 @@ describe('Cogz used correctly', function() {
         ]
       },
       value: function (arr, obj) {
-        obj.news.push(app.watchedArray.asCog.cogName + ' has been changed');
+        obj.news.push(arr.asCog.cogName + ' has been changed');
       }
     });
+
     // So now app has app.arrayWatcherFunction()
     expect(typeof app.arrayWatcherFunction).to.equal('function');
-    // It has one argGroup which is hoping for a 'newsObject'. Let's add one.
+
+    // It has one argGroup which is hoping for a 'newsObject'. Let's create one.
     cogz.add({
       container: app,
       cogName: 'newsObject',
       value: { news: [] }
     });
 
-    // Now that all arguments are ready, arrayWatcherFunction runs.
+    // Now that all arguments are ready, arrayWatcherFunction automatically runs.
     expect(app.newsObject.news.length).to.equal(1);
     expect(cogz.changes.length).to.equal(3);
     expect(cogz.changes[0].cogName).to.equal('watchedArray');
@@ -338,13 +520,49 @@ describe('Cogz used correctly', function() {
     expect(app.newsObject.asCog.changes.length).to.equal(3);
     expect(cogz.changes.length).to.equal(5);
 
-    // TODO: demonstrate reactive style code and undo/redo.
+    // These saved changes can be used to implement undo (using cogz.replace).
+    cogz.add({
+      container: app,
+      cogName: 'undo',
+      value: function undo(dataCog) {
+        var asCog = dataCog.asCog;
+        // Remember where we are in the undo-redo history.
+        if (!asCog.undoRedoIndex) {
+          asCog.undoRedoIndex = asCog.changes.length - 1;
+        }
+        // To undo, we're going back to the previous state.
+        asCog.undoRedoIndex = asCog.undoRedoIndex - 1;
+        // And let's account for old states we deleted to honor maxChangesToSave
+        var modifiedIndex = asCog.undoRedoIndex - asCog.numChangesDeleted;
+        // If we have called undo too many times and ran out of older states, quit.
+        if (!asCog.changes[modifiedIndex]) {
+          return;
+        }
+        // Otherwise, grab the older stringified state.
+        var olderStringValue = asCog.changes[modifiedIndex].stringValue;
+        // Rehydrate it.
+        var olderValue = JSON.parse(olderStringValue);
+        // Replace the current value with the older value, and we're done.
+        cogz.replace({
+          cogName: asCog.cogName,
+          value: olderValue
+        });
+      }
+    });
+
+    // Let's use our new undo function to remove newArrayItem from watchedArray.
+    app.undo(app.watchedArray);
+    expect(app.watchedArray.length).to.equal(1); // Length went down again.
+    expect(app.newsObject.news.length).to.equal(3); // Watchers still work.
+    expect(cogz.changes.length).to.equal(7); // This .changes increased by 2.
+    expect(app.watchedArray.asCog.changes.length).to.equal(3); // This by 1.
+
   });
 }); // end describe
 
 describe("The asCog property", function() {
   beforeEach(function () {
-    cogz.clear(['cogs', 'changes']); // let 'warnings' accumulate for last test.
+    cogz.clear(['cogNames', 'changes']); // let 'warnings' accumulate for last test.
   });
   var cogTypes = [
     ["a ", "function", function () {}],
@@ -574,7 +792,7 @@ describe("The asCog property", function() {
         container: app,
         cogName: name,
         value: JSON.parse(JSON.stringify(type[2])),
-        numValuesToSave: 2
+        maxChangesToSave: 2
       });
       cogz.add({
         container: app,
@@ -664,16 +882,16 @@ describe("The asCog property", function() {
     //   expect(changesEntry2.stringValue).to.contain('someValue');
     // }); // end it
 
-    it("provides numValuesToSave on " + type[0] + type[1] + ".", function () {
+    it("provides maxChangesToSave on " + type[0] + type[1] + ".", function () {
       var name = type[0] + type[1], app = {};
       cogz.add({
         container: app,
         cogName: name,
         value: JSON.parse(JSON.stringify(type[2]))
       });
-      expect(typeof app[name].asCog.numValuesToSave).to.equal('number');
-      expect(app[name].asCog.numValuesToSave).to.be.above(2);
-      expect(app[name].asCog.numValuesToSave).to.be.below(12);
+      expect(typeof app[name].asCog.maxChangesToSave).to.equal('number');
+      expect(app[name].asCog.maxChangesToSave).to.be.above(2);
+      expect(app[name].asCog.maxChangesToSave).to.be.below(12);
     });
   }); // end forEach dataType
   it("provides neederCogs on a function.", function () {
@@ -745,10 +963,25 @@ describe("The asCog property", function() {
     expect(app.needer.asCog.argGroups.groupX.length).to.equal(1);
     expect(app.needer.asCog.argGroups.groupX[0].include).to.equal('needed');
   }); // end it
+
+  it("provides originalFunction on a function.", function () {
+    var app = {};
+    cogz.add({
+      container: app,
+      cogName: 'someFunction',
+      argGroups: {
+        groupX: [{ include: 'needed' }]
+      },
+      value: function nm(par){'content';}
+    });
+    var fn = app.someFunction.asCog.originalFunction;
+    expect(typeof fn).to.equal('function');
+    expect(fn.toString()).to.equal('function nm(par){\'content\';}');
+  }); // end it
 }); // end describe the asCog function
 describe('Cogs used correctly (reprise)', function () {
   beforeEach(function () {
-    cogz.clear(['cogs', 'changes']); // let 'warnings' accumulate for last test.
+    cogz.clear(['cogNames', 'changes']); // let 'warnings' accumulate for last test.
   });
   it('has no warnings.', function () {
     expect(cogz.warnings.length).to.equal(0);

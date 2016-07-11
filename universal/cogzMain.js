@@ -1,32 +1,43 @@
+// TODO
+// record changes to cogz, like cogz.stringifyReplacer and cogz.maxChangesToSave.
+// removeCog and ensure no memory leak
+// fix getObjClass usage because will not allow constructed or Map or WeakMap or anything.
+// add incorrect/abuse/unexpectedInputs, ensure they give warning or error of some kind.
+// work through other scattered TODO comments
+
 (function cogzWrapper(window, module) {
-  var templog = console.log.bind(console);
-  var permLog = console.log.bind(console);
+  var logTemp = console.log.bind(console);
+  var logPerm = console.log.bind(console);
   var cogz = {
     add: add,
-    cogs: {},
+    replace: replace,
+    containersByCogName: {},
     warning: warning,
     warnings: [],
     changes: [],
     maxChangesToSave: 100,
+    numChangesDeleted: 0,
     getCog: getCog,
     count: count,
     recordChange: recordChange,
-    pushAndLimit: pushAndLimit,
+    pushChangeAndLimit: pushChangeAndLimit,
     registerObserver: registerObserver,
     toBeObserved: {},
     getObservers: getObservers,
     tryArgGroup: tryArgGroup,
-    clear: clear
+    clear: clear,
+    stringifyReplacer: stringifyReplacer
   };
   function clear(arr) { // for testing
-    if (!arr) arr = ['cogs', 'changes', 'warnings'];
+    if (!arr) arr = ['cogNames', 'changes', 'warnings'];
     arr.forEach(function (toClear) {
       switch (toClear) {
-        case 'cogs':
-          cogz.cogs = {};
+        case 'cogNames':
+          cogz.containersByCogName = {};
           break;
         case 'changes':
           cogz.changes = [];
+          cogz.numChangesDeleted = 0;
           break;
         case 'warnings':
           cogz.warnings = [];
@@ -37,8 +48,8 @@
   }
   function getCog(cogName) {
     // Look up the app reference by cogName, then use that to get the cog.
-    if (this.cogs[cogName]) {
-      return this.cogs[cogName][cogName];
+    if (this.containersByCogName[cogName]) {
+      return this.containersByCogName[cogName][cogName];
     }
   }
   function count(obj, key) {
@@ -55,12 +66,8 @@
     // and the change is recorded and watched only once.
     var latestStr = changed.asCog.changes.slice(-1)[0].stringValue;
     if (changeRecord.stringValue === latestStr) return;
-    cogz.pushAndLimit(
-      changed.asCog.changes,
-      changed.asCog.numValuesToSave,
-      changeRecord
-    );
-    cogz.pushAndLimit(cogz.changes, cogz.maxChangesToSave, {
+    cogz.pushChangeAndLimit(changed.asCog, changeRecord);
+    cogz.pushChangeAndLimit(cogz, {
       cogName: name,
       changeRecord: changeRecord
     });
@@ -70,7 +77,7 @@
       var type = observerRecord.observationType;
       thisCycle[changer] = thisCycle[changer] ? ++thisCycle[changer] : 1;
       setTimeout(function () {
-        thisCycle[changer] = 0;
+        thisCycle[changer] = 0; // Does this work in node?
       }, 0);
       if (thisCycle[changer] > 1 && type === 'watch') {
         var msg = "Warning: '" + changer + "' changed " + name + " more than once" +
@@ -79,18 +86,22 @@
         "time. To skip this protection, change 'watch:' to 'alwaysWatch:'.";
         cogz.warning(msg, observerRecord.observer);
         if (!cogz.getCog(observerRecord.observer).asCog.reduceLogs) {
-          permLog(msg);
+          logPerm(msg);
         }
       } else if (type === 'watch' || type === 'alwaysWatch') {
         tryArgGroup(observerRecord, 'fromChange');
       }
     });
   }
-  function pushAndLimit(arr, max, item) {
-    arr.push(item);
-    // Limit length, which could be a big change if the max was recently set.
-    // If max==arr.length+1, shift will work, but that's probably O(n) anyway.
-    arr.splice(0, arr.length - max);
+  function pushChangeAndLimit(obj, item) {
+    obj.changes.push(item);
+    if (obj.changes.length > obj.maxChangesToSave) {
+      // Limit length, which could be a big change if the max was recently set.
+      // If max==arr.length+1, shift will work, but that's probably O(n) anyway.
+      obj.changes.splice(0, obj.changes.length - obj.maxChangesToSave);
+      obj.numChangesDeleted++;
+    }
+
   }
   function warning(msg, cogName) {
     var entry = {
@@ -98,7 +109,7 @@
       warning: msg
     };
     cogz.warnings.push(entry);
-    cogz.pushAndLimit(cogz.changes, cogz.maxChangesToSave, entry);
+    cogz.pushChangeAndLimit(cogz, entry);
   }
   function registerObserver(args) {
     if (!args.argGroups) return;
@@ -154,7 +165,7 @@
       " where a watched change occurred before other args were ready.";
       cogz.warning(msg, observerRecord.observer);
       // if (!observerCog.asCog.reduceLogs) {
-      //   permLog(msg);
+      //   logPerm(msg);
       // }
     } else if (argsReady) {
       // add non-enumerable flag to array
@@ -172,29 +183,16 @@
       args.value.asCog.cogName + "'.";
       throw new Error(msg);
     }
-    if (cogz.cogs[args.cogName]) {
+    if (cogz.containersByCogName[args.cogName]) {
       msg = "Warning: a cog named '" + args.cogName + "' already exists but " +
       "now another has been added so the first may lose some functionality.";
       cogz.warning(msg, args.cogName);
       if (!args.reduceLogs) {
-        permLog(msg);
+        logPerm(msg);
       }
     }
-    cogz.cogs[args.cogName] = args.container;
-    if (!args.value ||
-      (typeof args.value !== 'object' && typeof args.value !== 'function')) {
-      msg = "Warning: A cog value must be a function, a plain object, or " +
-      "an array, but an attempt was made to add type: '" + typeof args.value +
-      "', value: " + JSON.stringify(args.value) + ", cogName: '" + args.cogName +
-      "'. It is being wrapped in an array for now, but consider fixing the code.";
-      cogz.warning(msg, args.cogName);
-      if (!args.reduceLogs) {
-        permLog(msg);
-      }
-      var oldValue = args.value;
-      args.value  = [];
-      args.value.push(oldValue);
-    }
+    // TODO: check for args.container and do something if it's not there.
+    cogz.containersByCogName[args.cogName] = args.container;
     if (args.container[args.cogName]) {
       msg = "Warning: An item by the name of '" + args.cogName +
       "' already existed on the specified container but is being overwritten " +
@@ -203,35 +201,66 @@
       "\nNew value: \n" + JSON.stringify(args.value);
       cogz.warning(msg, args.cogName);
       if (!args.reduceLogs) {
-        permLog(msg);
+        logPerm(msg);
       }
     }
-    var newCog = args.container[args.cogName] = generateCog(args);
-    // Check 1) what may be waiting already, and 2) if this will be waiting.
-    newCog.asCog.observers.forEach(function (observerRecord) {
-      tryArgGroup(observerRecord);
-    });
+    addOrReplace(args);
     if (typeof args.value === 'function') {
       cogz.registerObserver(args);
     }
   }
-  function generateCog(args) {
+  // Optional cog parameter for replace.
+  function addOrReplace(args, oldCog) {
+    // TODO: check for args.cogName and do something if it's not there.
+    if (!args.value ||
+      (typeof args.value !== 'object' && typeof args.value !== 'function')) {
+      msg = "Warning: A cog value must be a function, a plain object, or " +
+      "an array, but an attempt was made to add type: '" + typeof args.value +
+      "', value: " + JSON.stringify(args.value) + ", cogName: '" + args.cogName +
+      "'. It is being wrapped in an array for now, but consider fixing the code.";
+      cogz.warning(msg, args.cogName);
+      if (!args.reduceLogs) {
+        logPerm(msg);
+      }
+      var oldValue = args.value;
+      args.value = [];
+      args.value.push(oldValue);
+    }
+    var newCog = args.container[args.cogName] = generateCog(args, oldCog);
+    newCog.asCog.observers.forEach(function (observerRecord) {
+      tryArgGroup(observerRecord, !!oldCog);
+    });
+  }
+  // Would call this replaceValue but it may replace other stuff at some point?
+  function replace(args) {
+    var container;
+    if (args.container) {
+      cogz.containersByCogName[args.cogName] = container = args.container;
+    } else { // if (cogz.containersByCogName[args.cogName]) {
+      args.container = container = cogz.containersByCogName[args.cogName];
+    }
+    //else { TODO: do something, because they're replacing a non-existent cog? }
+    addOrReplace(args, container[args.cogName]);
+  }
+  // args from add or replace, optional oldCog parameter from replace
+  function generateCog(args, oldCog) {
     var cog = (typeof args.value === 'function') ? wrapper(args) : args.value;
     Object.defineProperty(cog, 'asCog', {
       enumerable: false,
       configurable: true,
       writable: true,
-      value: generateAsCog(args)
+      value: generateAsCog(args, oldCog)
     });
     return cog;
   }
   function wrapper(initArgs) {
-    function wrapping(/*arguments*/) {
+    function wrapping(/* runtime arguments */) {
+      // Note that what's passed to noteArgs is the runtime arguments.
       var dataArgs = noteArgs(arguments, cogz.getCog(initArgs.cogName));
       // Run function and capture returnValue
       returnValue = initArgs.value.apply(null, arguments)
 
-      saveOverwrittenValues(initArgs, dataArgs)
+      saveOverwrittenValues(initArgs.cogName, dataArgs)
       return returnValue;
     }
     // Fix wrapping toString and valueOf to reflect wrapped function.
@@ -255,7 +284,7 @@
         } else {
           indent = 0;
         }
-        dataArgs.strings[cName1] = JSON.stringify(arg, funcsToo, indent);
+        dataArgs.strings[cName1] = JSON.stringify(arg, cogz.stringifyReplacer, indent);
         dataArgs.cogs[cName1] = arg;
         latest = cName1 && arg.asCog.changes.slice(-1)[0].stringValue;
         if (cName1 && dataArgs.strings[cName1] !== latest) {
@@ -270,7 +299,7 @@
     } // end for loop
     return dataArgs;
   }
-  function saveOverwrittenValues(initArgs, dataArgs) {
+  function saveOverwrittenValues(initCogName, dataArgs) {
     var newString, cInfo, time, fnName, indent;
     for (var name in dataArgs.cogs) {
       if (Object.keys(dataArgs.cogs[name]).length > 3) {
@@ -278,9 +307,9 @@
       } else {
         indent = 0;
       }
-      newString = JSON.stringify(dataArgs.cogs[name], funcsToo, indent);
+      newString = JSON.stringify(dataArgs.cogs[name], cogz.stringifyReplacer, indent);
       cInfo = dataArgs.cogs[name].asCog;
-      fnName = initArgs.cogName;
+      fnName = initCogName;
       if (newString === dataArgs.strings[name]) {
         cogz.count(cInfo.nonChangerCogs, fnName);
       } else {
@@ -294,56 +323,68 @@
       }
     }
   }
-  function funcsToo(key, val) {
+  function stringifyReplacer(key, val) {
     if (typeof val === 'function') {
       return val.toString();
     } else {
       return val;
     }
   }
-  function generateAsCog(args) {
+  function generateAsCog(args, oldCog) {
     var asCog = (typeof args.value === 'function') ?
-      generateAsCogForFunction(args) : generateAsCogForData(args);
+      generateAsCogForFunction(args, oldCog) : generateAsCogForData(args, oldCog);
     asCog.cogName = args.cogName;
-    asCog.observers = cogz.getObservers(args.cogName);
+    asCog.observers = oldCog ? oldCog.asCog.observers : cogz.getObservers(args.cogName);
     return asCog;
   }
-  function generateAsCogForFunction(args) {
-    return {
+  function generateAsCogForFunction(args, oldCog) {
+    // TODO: check if args has argGroups or something to replace?
+    return oldCog ? oldCog.asCog : {
       isFunction: true,
       neederCogs: {},
       neededCogs: {},
       argGroups: args.argGroups,
       thisCycle: {},
-      reduceLogs: args.reduceLogs
+      reduceLogs: args.reduceLogs,
+      originalFunction: args.value
     };
   }
-  function generateAsCogForData(args) {
+  function generateAsCogForData(args, oldCog) {
     var time = new Date().toISOString();
-    var fnName = 'cogz.add';
+    var fnName = oldCog ? 'cogz.replace' : 'cogz.add';
+    oldAsCog = oldCog ? oldCog.asCog : {};
     if (Object.keys(args.value).length > 3) {
       args.indent =  2;
     } else {
       args.indent = 0;
     }
-    var str = JSON.stringify(args.value, funcsToo, args.indent);
+    var str = JSON.stringify(args.value, cogz.stringifyReplacer, args.indent);
     var record = {
       whenValueStarted: time,
       byWhatFunction: fnName,
       stringValue: str
     };
-    cogz.pushAndLimit(cogz.changes, cogz.maxChangesToSave, {
-      cogName: args.cogName,
-      changeRecord: record
-    });
-    return {
-      changes: [record],
-      numValuesToSave: args.numValuesToSave || 10,
-      changerCogs: {
-        'cogz.add': 1
-      },
-      nonChangerCogs: {}
+    var changerCogs = oldAsCog.changerCogs || {};
+    changerCogs[fnName] = changerCogs[fnName] ? changerCogs[fnName] + 1 : 1;
+    var asCog = {
+      changes: oldAsCog.changes || [],
+      maxChangesToSave: args.maxChangesToSave || oldAsCog.maxChangesToSave || 10,
+      numChangesDeleted: oldAsCog.numChangesDeleted || 0,
+      changerCogs: changerCogs,
+      nonChangerCogs: oldAsCog.nonChangerCogs || {}
     };
+    // // If replacing, allow observers to do their thing.
+    // if (oldAsCog.cogName) {
+    //   cogz.recordChange(oldAsCog.cogName, record);
+    // }
+    // else { // If adding, wait until all includes are added.
+      cogz.pushChangeAndLimit(cogz, {
+        cogName: args.cogName,
+        changeRecord: record
+      });
+      cogz.pushChangeAndLimit(asCog, record);
+    //}
+    return asCog;
   }
   // Tests run either in Node.js or browser but not both at once, so . . .
   /* istanbul ignore next */
