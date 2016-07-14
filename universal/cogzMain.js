@@ -6,6 +6,7 @@
 // work through other scattered TODO comments
 
 (function cogzWrapper(window, module) {
+  'use strict';
   var logTemp = console.log.bind(console);
   var logPerm = console.log.bind(console);
   var cogz = {
@@ -26,7 +27,10 @@
     getObservers: getObservers,
     tryArgGroup: tryArgGroup,
     clear: clear,
-    stringifyReplacer: stringifyReplacer
+    stringifyReplacer: stringifyReplacer,
+    logTemp: logTemp,
+    view: {},
+    model: {}
   };
   function clear(arr) { // for testing
     if (!arr) arr = ['cogNames', 'changes', 'warnings'];
@@ -125,9 +129,9 @@
           observationType: type,
           changersThisCycle: {}
         };
-        observed = cogz.getCog(argName);
-        if (observed) {
-          observed.asCog.observers.push(observerRecord);
+        observedCog = cogz.getCog(argName);
+        if (observedCog) {
+          observedCog.asCog.observers.push(observerRecord);
           tryArgGroup(observerRecord);
         } else {
           cogz.toBeObserved[argName] = cogz.toBeObserved[argName] || [];
@@ -214,7 +218,7 @@
     // TODO: check for args.cogName and do something if it's not there.
     if (!args.value ||
       (typeof args.value !== 'object' && typeof args.value !== 'function')) {
-      msg = "Warning: A cog value must be a function, a plain object, or " +
+      var msg = "Warning: A cog value must be a function, a plain object, or " +
       "an array, but an attempt was made to add type: '" + typeof args.value +
       "', value: " + JSON.stringify(args.value) + ", cogName: '" + args.cogName +
       "'. It is being wrapped in an array for now, but consider fixing the code.";
@@ -258,7 +262,7 @@
       // Note that what's passed to noteArgs is the runtime arguments.
       var dataArgs = noteArgs(arguments, cogz.getCog(initArgs.cogName));
       // Run function and capture returnValue
-      returnValue = initArgs.value.apply(null, arguments)
+      var returnValue = initArgs.value.apply(null, arguments)
 
       saveOverwrittenValues(initArgs.cogName, dataArgs)
       return returnValue;
@@ -352,7 +356,7 @@
   function generateAsCogForData(args, oldCog) {
     var time = new Date().toISOString();
     var fnName = oldCog ? 'cogz.replace' : 'cogz.add';
-    oldAsCog = oldCog ? oldCog.asCog : {};
+    var oldAsCog = oldCog ? oldCog.asCog : {};
     if (Object.keys(args.value).length > 3) {
       args.indent =  2;
     } else {

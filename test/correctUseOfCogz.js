@@ -1,10 +1,11 @@
 'use strict';
 
-var expect = require('chai').expect;
-var cogz= require('../index');
+var logTemp = console.log.bind(console);
+var isNodeJs = typeof window === 'undefined';
+var expect = isNodeJs ? require('chai').expect : window.expect;
+var cogz =  isNodeJs ? require('../index') : window.cogz;
 
 describe('Cogz used correctly', function() {
-  var logTemp = console.log.bind(console);
   beforeEach(function () {
     cogz.clear(['cogNames', 'changes']); // let 'warnings' accumulate for last test.
   });
