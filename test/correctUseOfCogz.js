@@ -439,6 +439,13 @@ describe('Cogz used correctly', function() {
     expect(cogz.changes[0].changeRecord.stringValue).to.equal('"someText"');
     cogz.stringifyReplacer = oldReplacer;
   });
+  it("allows implicit x container.", function () {
+    cogz.add({
+      cogName: 'someCog',
+      value: { someProp: 'someVal' }
+    });
+    expect(cogz.x.someCog.someProp).to.equal('someVal');
+  });
   it("handles a good example for the readme.", function () {
 
     // Create one or more containers for namespacing.
@@ -558,6 +565,14 @@ describe('Cogz used correctly', function() {
     expect(cogz.changes.length).to.equal(7); // This .changes increased by 2.
     expect(app.watchedArray.asCog.changes.length).to.equal(3); // This by 1.
 
+    // For cogz users who do not want to keep up with their own containers,
+    // Cogz includes an empty object named 'x' for 'extensions', and
+    // if the user does not specify a container, cogz.x is used as the default..
+    cogz.add({
+      cogName: 'cogWithNoSpecifiedContainer',
+      value: { someProp: 'someVal' }
+    });
+    expect(cogz.x.cogWithNoSpecifiedContainer.someProp).to.equal('someVal');
   });
 }); // end describe
 

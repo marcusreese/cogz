@@ -29,8 +29,7 @@
     clear: clear,
     stringifyReplacer: stringifyReplacer,
     logTemp: logTemp,
-    view: {},
-    model: {}
+    x: {} // for framework-user's extensions
   };
   function clear(arr) { // for testing
     if (!arr) arr = ['cogNames', 'changes', 'warnings'];
@@ -195,7 +194,7 @@
         logPerm(msg);
       }
     }
-    // TODO: check for args.container and do something if it's not there.
+    args.container = args.container || cogz.x;
     cogz.containersByCogName[args.cogName] = args.container;
     if (args.container[args.cogName]) {
       msg = "Warning: An item by the name of '" + args.cogName +

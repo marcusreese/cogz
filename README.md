@@ -127,6 +127,15 @@ I created this in my limited spare time during June and July of 2016. I'm almost
     expect(cogz.changes.length).to.equal(7); // This .changes increased by 2.
     expect(app.watchedArray.asCog.changes.length).to.equal(3); // This by 1.
 
+    // For cogz users who do not want to keep up with their own containers,
+    // Cogz includes an empty object named 'x' for 'extensions', and
+    // if the user does not specify a container, cogz.x is used as the default..
+    cogz.add({
+      cogName: 'cogWithNoSpecifiedContainer',
+      value: { someProp: 'someVal' }
+    });
+    expect(cogz.x.cogWithNoSpecifiedContainer.someProp).to.equal('someVal');
+
 ```
 
 ## Why I created Cogz
