@@ -1,6 +1,8 @@
 # Cogz
 A JavaScript microframework
 
+** This implementation was abandoned, but the concepts live on! **
+
 [![Build Status](https://travis-ci.org/marcusreese/cogz.svg?branch=master)](https://travis-ci.org/marcusreese/cogz) [![Coverage Status](https://coveralls.io/repos/github/marcusreese/cogz/badge.svg?branch=master)](https://coveralls.io/github/marcusreese/cogz?branch=master&whyThisWillNotUpdate=unknown)
 
 ## Synopsis
